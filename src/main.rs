@@ -38,7 +38,14 @@ fn main() {
                                     .unwrap();
                                 println!("Jugador {} unido desde {}", id, addr);
                             }
-                            GamePacket::PlayerPos { id, x, y, dir } => {
+                            GamePacket::PlayerPos {
+                                id,
+                                x,
+                                y,
+                                dir,
+                                level_x,
+                                level_y,
+                            } => {
                                 for (&player_addr, &player_id) in players.iter() {
                                     if player_addr != addr {
                                         let bytes = postcard::to_allocvec(&GamePacket::PlayerPos {
@@ -46,6 +53,8 @@ fn main() {
                                             x,
                                             y,
                                             dir,
+                                            level_x,
+                                            level_y,
                                         })
                                         .unwrap();
                                         packet_sender
