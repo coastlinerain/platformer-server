@@ -93,6 +93,25 @@ fn main() {
 
                                 broadcast_leave(&players, &packet_sender, id);
                             }
+                            GamePacket::Hit { id } => {
+                                println!("Jugador {} ha muerto", id);
+
+                                // Retransmitimos a todos para que actualicen sus listas
+                                for (&player_addr, &player_id) in players.iter() {
+                                    if player_id != id {
+                                        let bytes =
+                                            postcard::to_allocvec(&GamePacket::Hit { id: (id) })
+                                                .unwrap();
+                                        packet_sender
+                                            .send(Packet::reliable_ordered(
+                                                player_addr,
+                                                bytes,
+                                                None,
+                                            ))
+                                            .unwrap();
+                                    }
+                                }
+                            }
                             _ => {}
                         }
                     }
@@ -109,7 +128,7 @@ fn main() {
     }
 }
 
-fn broadcast_leave(players: &HashMap<SocketAddr, u64>, sender: &Sender<Packet>, dropped_id: u64) {
+fn broadcast_leave(players: &HashMap<SocketAddr, u8>, sender: &Sender<Packet>, dropped_id: u8) {
     let leave_msg = GamePacket::Leave { id: dropped_id };
     let bytes = postcard::to_allocvec(&leave_msg).expect("Error serializando Leave");
 
